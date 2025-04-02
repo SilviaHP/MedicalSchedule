@@ -28,10 +28,10 @@ Sistema de gestión de citas médicas basado en arquitectura serverless con AWS,
 
 3. **Procesamiento por País**:
    - `processAppointmentPE` o `processAppointmentCL` Lambda se activa.
-   - La Lambda accede a la base de datos RDS específica del país.
+   - La Lambda accede a la base de datos RDS MySQL, específica por país.
    - Inserta los datos en la tabla `appointment_pe` o `appointment_cl`.
    - Envía evento de confirmación a EventBridge.
-
+, 
 4. **Confirmación de Cita**:
    - EventBridge recibe el evento de confirmación.
    - La regla `AppointmentConfirmationRule` enruta el evento a `appointment-confirmation-queue`.
@@ -123,6 +123,10 @@ src/
    - Implementa patrón Singleton
    - Utilizado para comunicación con colas SQS
 
+3. **SNS Client** (`sns_client.ts`):
+   - Implementa patrón Singleton
+   - Utilizado para comunicación con notificaciones SNS   
+
 ## Configuración
 
 El proyecto utiliza serverless.ts para definir todos los recursos de CloudFormation, incluyendo:
@@ -136,40 +140,15 @@ El proyecto utiliza serverless.ts para definir todos los recursos de CloudFormat
 - Políticas IAM
 - Configuración VPC
 
-### Variables de Entorno
-
-Principales variables utilizadas:
-
-```
-DEMO_REGION: "us-east-1"
-APPOINTMENTS_TABLE: "appointments"
-SNS_TOPIC_ARN: { Ref: "AppointmentTopic" }
-EVENT_BUS_NAME: { Ref: "AppointmentEventBus" }
-CONFIRMATION_QUEUE_URL: { Ref: "AppointmentConfirmationQueue" }
-DB_HOST: "appointment-db.c3oi8oiu8nil.us-east-1.rds.amazonaws.com"
-```
 
 ## Infraestructura VPC
 
-Las funciones `processAppointmentPE` y `processAppointmentCL` están configuradas con acceso VPC para conectarse a RDS:
+Las funciones lambda `processAppointmentPE` y `processAppointmentCL` están configuradas con acceso VPC para conectarse a RDS:
 
-- Requieren acceso a la base de datos RDS MySQL dentro de la VPC
+- Cuentan con acceso a la base de datos RDS MySQL dentro de la VPC
 - Configuradas con timeout de 30 segundos para permitir operaciones de base de datos
 - Equipadas con permisos para gestionar interfaces de red en VPC
 
-## Consideraciones de Implementación
-
-1. **Timeouts**:
-   - Las operaciones con EventBridge pueden experimentar timeouts si no hay acceso adecuado desde la VPC
-   - Se recomienda usar endpoints VPC o implementar estrategias de retry
-
-2. **Patrones de Error**:
-   - Todas las operaciones asíncronas deben implementar manejo de errores adecuado
-   - Se recomienda el uso de retries con backoff exponencial
-
-3. **Costos y Optimización**:
-   - La configuración actual está optimizada para desarrollo
-   - Para producción, considerar ajustes en caching, concurrencia y escalamiento
 
 ## Despliegue
 

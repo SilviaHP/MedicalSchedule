@@ -1,0 +1,196 @@
+openapi: 3.0.3
+info:
+  title: Medical Schedule API
+  description: |
+    API para la gestión de citas médicas en múltiples países.
+    
+    Este sistema permite:
+    * Crear citas médicas para asegurados
+    * Consultar citas existentes por ID del asegurado
+
+  version: 1.0.0
+  contact:
+    name: Equipo de Desarrollo
+  license:
+    name: Privada
+servers:
+  - url: https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev
+    description: Entorno de desarrollo
+paths:
+  /appointments:
+    post:
+      summary: Crea una nueva cita médica
+      description: |
+        Crea una nueva cita para el asegurado y la envía para procesamiento
+        según el país especificado (PE/CL).
+      tags:
+        - Appointments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentRequest'
+      responses:
+        '201':
+          description: Cita creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /appointments/{insuredId}:
+    get:
+      summary: Obtiene las citas de un asegurado
+      description: Retorna todas las citas asociadas al ID del asegurado
+      tags:
+        - Appointments
+      parameters:
+        - name: insuredId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID del asegurado
+          example: "INS-12345"
+      responses:
+        '200':
+          description: Lista de citas encontradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppointmentResponse'
+        '404':
+          description: No se encontraron citas para el asegurado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    AppointmentRequest:
+      type: object
+      required:
+        - insuredId
+        - specialtyId
+        - medicId
+        - date
+        - countryISO
+      properties:
+        insuredId:
+          type: string
+          description: ID del asegurado
+          example: "INS-12345"
+        specialtyId:
+          type: string
+          description: ID de la especialidad médica
+          example: "CARD-01"
+        medicId:
+          type: string
+          description: ID del doctor
+          example: "DOC-789"
+        date:
+          type: string
+          format: date-time
+          description: Fecha y hora de la cita (ISO 8601)
+          example: "2025-04-15T14:30:00Z"
+        countryISO:
+          type: string
+          description: Código ISO del país (PE o CL)
+          enum: [PE, CL]
+          example: "PE"
+        comments:
+          type: string
+          description: Comentarios adicionales (opcional)
+          example: "Primera visita, evaluación general"
+    AppointmentResponse:
+      type: object
+      properties:
+        appointmentId:
+          type: string
+          description: ID único de la cita generado por el sistema
+          example: "APT-2025-04-001"
+        insuredId:
+          type: string
+          description: ID del asegurado
+          example: "INS-12345"
+        specialtyId:
+          type: string
+          description: ID de la especialidad médica
+          example: "CARD-01"
+        medicId:
+          type: string
+          description: ID del doctor
+          example: "DOC-789"
+        dateSchedule:
+          type: string
+          format: date-time
+          description: Fecha y hora de la cita (ISO 8601)
+          example: "2025-04-15T14:30:00Z"
+        countryISO:
+          type: string
+          description: Código ISO del país
+          example: "PE"
+        status:
+          type: string
+          description: Estado actual de la cita
+          enum: [PENDING, PROCESSING, CONFIRMED, COMPLETED, CANCELED]
+          example: "CONFIRMED"
+        comments:
+          type: string
+          description: Comentarios adicionales
+          example: "Primera visita, evaluación general"
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de creación del registro
+          example: "2025-04-02T10:15:30Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de última actualización
+          example: "2025-04-02T10:20:45Z"
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          description: Código HTTP del error
+          example: 400
+        message:
+          type: string
+          description: Descripción del error
+          example: "Datos de cita inválidos"
+        error:
+          type: string
+          description: Tipo de error
+          example: "Bad Request"
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: Appointments
+    description: Operaciones relacionadas con citas médicas

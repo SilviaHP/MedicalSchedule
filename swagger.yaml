@@ -11,10 +11,8 @@ info:
   version: 1.0.0
   contact:
     name: Equipo de Desarrollo
-  license:
-    name: Privada
 servers:
-  - url: https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev
+  - url: https://xxxx.execute-api.us-east-1.amazonaws.com/dev
     description: Entorno de desarrollo
 paths:
   /appointments:
@@ -99,20 +97,28 @@ components:
         insuredId:
           type: string
           description: ID del asegurado
-          example: "INS-12345"
-        specialtyId:
+          example: "0001"
+        scheduleId:
           type: string
-          description: ID de la especialidad médica
-          example: "CARD-01"
-        medicId:
-          type: string
-          description: ID del doctor
-          example: "DOC-789"
-        date:
+          description: ID del horario
+          example: "0001"          
+        dateSchedule:
           type: string
           format: date-time
           description: Fecha y hora de la cita (ISO 8601)
-          example: "2025-04-15T14:30:00Z"
+          example: "2025-04-17T12:30:00Z"   
+        centerId:
+          type: string
+          description: ID del centro medico
+          example: "01"          
+        specialtyId:
+          type: string
+          description: ID de la especialidad médica
+          example: "01"
+        medicId:
+          type: string
+          description: ID del doctor
+          example: "001"
         countryISO:
           type: string
           description: Código ISO del país (PE o CL)
@@ -127,39 +133,48 @@ components:
       properties:
         appointmentId:
           type: string
-          description: ID único de la cita generado por el sistema
-          example: "APT-2025-04-001"
+          description: ID interno (uuid)
+          example: "0001"      
         insuredId:
           type: string
           description: ID del asegurado
-          example: "INS-12345"
-        specialtyId:
+          example: "0001"
+        scheduleId:
           type: string
-          description: ID de la especialidad médica
-          example: "CARD-01"
-        medicId:
-          type: string
-          description: ID del doctor
-          example: "DOC-789"
+          description: ID del horario
+          example: "0001"          
         dateSchedule:
           type: string
           format: date-time
           description: Fecha y hora de la cita (ISO 8601)
-          example: "2025-04-15T14:30:00Z"
+          example: "2025-04-17T12:30:00Z"   
+        centerId:
+          type: string
+          description: ID del centro medico
+          example: "01"          
+        specialtyId:
+          type: string
+          description: ID de la especialidad médica
+          example: "01"
+        medicId:
+          type: string
+          description: ID del doctor
+          example: "001"
         countryISO:
           type: string
-          description: Código ISO del país
+          description: Código ISO del país (PE o CL)
+          enum: [PE, CL]
           example: "PE"
+        comments:
+          type: string
+          description: Comentarios adicionales (opcional)
+          example: "Primera visita, evaluación general"
         status:
           type: string
           description: Estado actual de la cita
-          enum: [PENDING, PROCESSING, CONFIRMED, COMPLETED, CANCELED]
+          enum: [ PENDING, CONFIRMED ]
           example: "CONFIRMED"
-        comments:
-          type: string
-          description: Comentarios adicionales
-          example: "Primera visita, evaluación general"
-        createdAt:
+        dateCreated:
           type: string
           format: date-time
           description: Fecha de creación del registro

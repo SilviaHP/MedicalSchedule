@@ -25,17 +25,24 @@ export const publishMessage = async (topicArn: string, message: string, messageA
     TopicArn: topicArn,
     MessageAttributes: messageAttributes
   };
-  
-  const command = new PublishCommand(params);
-  const response = await client.send(command);
+    try {
+        const command = new PublishCommand(params);
+        const response = await client.send(command);
 
-   return response.MessageId || '';
+        return response.MessageId || '';
+    } catch (error) {
+        console.error('Error publishing message from SNS:', error);
+        throw error;
+    }
 };
 
+
+// funcion invocada en create_appointment.ts para enviar el mensaje a SNS 
 export const publishAppointmentCreated = async (appointment: any): Promise<string> => {
   const topicArn = process.env.SNS_TOPIC_ARN!;
   
-  const messagePayload = {
+  // Agregar logs detallados
+   const messagePayload = {
     event: 'APPOINTMENT_CREATED',
     timestamp: new Date().toISOString(),
     data: appointment
@@ -54,4 +61,3 @@ export const publishAppointmentCreated = async (appointment: any): Promise<strin
   
   return await publishMessage(topicArn, JSON.stringify(messagePayload), messageAttributes);
 };
-

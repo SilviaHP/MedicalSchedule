@@ -1,10 +1,8 @@
 import type { AWS } from "@serverless/typescript";
 
 const vpcConfig = {
-  securityGroupIds: ["sg-06e509750fa83bb82"],
+  securityGroupIds: ["sg-06e509750fa83bb82" ,"sg-025a44df7c6427396"],
   subnetIds: [
-    "subnet-0906e513ff3678833",
-    "subnet-0d7bf577283b4926e",
     "subnet-07323cc2c96062534",
     "subnet-00d4d2ad98136106d",
   ],
@@ -28,7 +26,8 @@ const serverlessConfiguration: AWS = {
       APPOINTMENTS_TABLE: "appointments",
       SNS_TOPIC_ARN: { Ref: "AppointmentTopic" },
       EVENT_BUS_NAME: { Ref: "AppointmentEventBus" },
-      CONFIRMATION_QUEUE_URL: { Ref: "AppointmentConfirmationQueue" },
+      
+      VPC_ID: "vpc-067f0257d29a11fbc",
       DB_HOST: "appointment-db.c3oi8oiu8nil.us-east-1.rds.amazonaws.com",
       DB_PORT: "3306",
       DB_NAME: "appointments",
@@ -86,13 +85,17 @@ const serverlessConfiguration: AWS = {
               "ec2:DeleteNetworkInterface",
               "ec2:AssignPrivateIpAddresses",
               "ec2:UnassignPrivateIpAddresses",
+              "ec2:DescribeVpcEndpoints",
+              "ec2:DescribeRouteTables",
+              "ec2:CreateRoute",
+              "ec2:DeleteRoute"
             ],
             Resource: "*",
           },
           {
             Effect: "Allow",
             Action: ["events:PutEvents"],
-            Resource: [{ "Fn::GetAtt": ["AppointmentEventBus", "Arn"] }],
+            Resource: "*",
           },
           {
             Effect: "Allow",
@@ -160,7 +163,7 @@ const serverlessConfiguration: AWS = {
         {
           sqs: {
             arn: { "Fn::GetAtt": ["AppointmentQueuePE", "Arn"] },
-            batchSize: 10, //nro. mensajes a procesar por invocacion
+            batchSize: 10, 
           },
         },
       ],
@@ -187,10 +190,11 @@ const serverlessConfiguration: AWS = {
           sqs: {
             arn: { "Fn::GetAtt": ["AppointmentConfirmationQueue", "Arn"] },
             batchSize: 10,
+            maximumBatchingWindow: 0,
+            enabled: true
           },
         },
       ] ,
-      timeout: 30, 
     },
   },
 
@@ -238,6 +242,16 @@ const serverlessConfiguration: AWS = {
         },
       },
 
+      AppointmentConfirmationQueue: {
+        Type: "AWS::SQS::Queue",
+        Properties: {
+          QueueName: "appointment-confirmation-queue",
+          VisibilityTimeout: 60,
+          DelaySeconds: 0,
+          ReceiveMessageWaitTimeSeconds: 0,
+        },
+      },
+
       AppointmentTopic: {
         Type: "AWS::SNS::Topic",
         Properties: {
@@ -264,7 +278,7 @@ const serverlessConfiguration: AWS = {
           FilterPolicy: '{"country":["CL"]}',
         },
       },
-
+      
       QueuePolicyPE: {
         Type: "AWS::SQS::QueuePolicy",
         Properties: {
@@ -335,12 +349,12 @@ const serverlessConfiguration: AWS = {
         Properties: {
           EventBusName: { Ref: "AppointmentEventBus" },
           Name: "appointment-confirmation-rule",
-          Description:
-            "Captura los eventos de confirmacion de citas y los envia al SQS",
+          Description: "Captura los eventos de confirmacion de citas y los envia al SQS",
           EventPattern: {
             source: ["appointment.service"],
             "detail-type": ["AppointmentConfirmation"],
           },
+          State: "ENABLED",
           Targets: [
             {
               Arn: { "Fn::GetAtt": ["AppointmentConfirmationQueue", "Arn"] },
@@ -348,14 +362,6 @@ const serverlessConfiguration: AWS = {
               RoleArn: { "Fn::GetAtt": ["EventBridgeToSQSRole", "Arn"] }
             },
           ],
-        },
-      },
-
-      AppointmentConfirmationQueue: {
-        Type: "AWS::SQS::Queue",
-        Properties: {
-          QueueName: "appointment-confirmation-queue",
-          VisibilityTimeout: 60,
         },
       },
 
@@ -420,8 +426,26 @@ const serverlessConfiguration: AWS = {
           ],
         },
       },
+
+      EventBridgeVpcEndpoint:{
+        Type: "AWS::EC2::VPCEndpoint",
+        Properties: {
+          ServiceName: { "Fn::Sub" : "com.amazonaws.${AWS::Region}.events" },
+          VpcId: "vpc-067f0257d29a11fbc" ,
+          VpcEndpointType: "Interface",
+          SubnetIds: [
+            "subnet-07323cc2c96062534", 
+            "subnet-00d4d2ad98136106d", 
+          ],
+          SecurityGroupIds : ["sg-025a44df7c6427396"],
+          PrivateDnsEnabled: true,
+        }
+      },
+
+
     },
   },
-};
+}; 
+
 
 module.exports = serverlessConfiguration;

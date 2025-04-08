@@ -1,11 +1,11 @@
 import { SQSEvent } from 'aws-lambda';
 import { updateAppointmentStatus } from '../../infraestructure/repositories/dynamodb_repository';
 
-/**
- * Extrae datos de cita del mensaje, manejando diferentes formatos
- * @param record Registro del mensaje SQS
- * @returns Datos normalizados de la cita
- */
+
+// Eetrae datos de cita del mensaje, manejando diferentes formatos
+// @param record Registro del mensaje SQS
+// @returns Datos normalizados de la cita
+ 
 const extractAppointmentData = (record: any): any => {
   try {
     // Intentar parsear el cuerpo como JSON
@@ -32,37 +32,31 @@ const extractAppointmentData = (record: any): any => {
     }
   } catch (error) {
     console.error('Error extrayendo datos de cita del mensaje:', error);
-    console.error('Cuerpo del mensaje original:', record.body);
     throw error;
   }
 };
 
-/**
- * Manejador para procesar confirmaciones de citas desde SQS
- * Recibe mensajes de EventBridge y actualiza el estado en DynamoDB
- */
+
+// recibe mensajes de EventBridge y actualiza el estado en DynamoDB
 export const handler = async (event: SQSEvent): Promise<void> => {
 
   for (const record of event.Records) {
     try {
-      console.log('Procesando mensaje de confirmación:', record.messageId);
-      
-      // Extraer datos de la cita (maneja diferentes formatos)
+      // extrae datos de la cita (maneja diferentes formatos)
       const appointmentData = extractAppointmentData(record);
       
-       // Validar que el mensaje contiene appointmentId
+      // valida que el mensaje contiene appointmentId
       if (!appointmentData.appointmentId) {
         console.error('Mensaje de confirmación no contiene appointmentId:', appointmentData);
         continue; // Saltar este mensaje
       }
 
-      // Actualizar la cita en DynamoDB
-      const updatedAppointment = await updateAppointmentStatus(
+      // actualiza la cita en DynamoDB
+      await updateAppointmentStatus(
         appointmentData.appointmentId, 
         'COMPLETED'
       );
       
-      console.log('Cita actualizada correctamente:', JSON.stringify(updatedAppointment).substring(0, 200));
       
     } catch (error) {
       console.error('Error procesando mensaje de confirmación:', error);

@@ -3,12 +3,6 @@ import { Appointment } from "../../domain/entities/appointment";
 import { AppointmentRepository } from "../../domain/ports/appointment_repository";
 import { AppointmentRepositoryImplement } from "../../infraestructure/repositories/appointment_repository_impl";
 import { publishAppointmentCreated } from "../../infraestructure/messaging/sns_client";
-
-// Ensure this file exists and the path is correct
-//import { SNSClient } from '../../infrastructure/messaging/sns_client';
-//import { validateAppointment } from '../../utils/validators';
-//import { logger } from '../../utils/logger';
-
 import { Messages } from "../../application/utils/messages";
 const {
   APPOINTMENT_REGISTRATION_ERROR,
@@ -18,7 +12,6 @@ const {
 
 const appointmentRepository: AppointmentRepository =
   new AppointmentRepositoryImplement();
-//const snsClient = new SNSClient();
 
 export const handler = async (event: APIGatewayEvent) => {
   try {
@@ -63,8 +56,8 @@ export const handler = async (event: APIGatewayEvent) => {
     const savedAppointment = await appointmentRepository.save(appointment);
 
     // publicar en SNS
-    const messageId = await publishAppointmentCreated(savedAppointment);
-
+    await publishAppointmentCreated(savedAppointment);
+    
     return {
       statusCode: 201,
       headers: { "Content-Type": "application/json" },

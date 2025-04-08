@@ -103,7 +103,8 @@ src/
 ├── application/          # Casos de uso y handlers de Lambda
 │   └── handlers/
 ├── domain/               # Lógica de negocio y entidades
-│   └── services/
+│   └── entities/
+│   └── ports/
 └── infrastructure/       # Adaptadores externos (repos, clientes)
     ├── messaging/        # Clientes de SNS, SQS y EventBridge
     └── repositories/     # Acceso a DynamoDB y RDS
@@ -113,7 +114,7 @@ src/
 
 1. **DynamoDB Client** (`dynamodb_repository.ts`):
    - Implementa patrón Singleton para reutilización de conexiones
-   - Métodos principales: `getAppointmentById`, `updateAppointmentStatus`
+   - Métodos registro, consulta y actualización en DynamoDB: `create_appointment`,`getAppointmentById`, `updateAppointmentStatus` 
 
 2. **EventBridge Client** (`eventbridge_client.ts`):
    - Implementa patrón Singleton
@@ -123,7 +124,7 @@ src/
    - Implementa patrón Singleton
    - Utilizado para comunicación con colas SQS
 
-3. **SNS Client** (`sns_client.ts`):
+4. **SNS Client** (`sns_client.ts`):
    - Implementa patrón Singleton
    - Utilizado para comunicación con notificaciones SNS   
 
@@ -132,13 +133,17 @@ src/
 El proyecto utiliza serverless.ts para definir todos los recursos de CloudFormation, incluyendo:
 
 - Funciones Lambda
-- Tablas DynamoDB
+- Tabla DynamoDB
 - Colas SQS
 - Temas SNS
 - Bus de eventos EventBridge
 - Reglas y destinos
 - Políticas IAM
-- Configuración VPC
+- Interface vpc endpoint para comunicacion entre lambdas dentro de VPC e EventBridge
+
+Otros recursos externos:
+- VPC que la base de datos RDS mysql
+- Security group
 
 
 ## Infraestructura VPC

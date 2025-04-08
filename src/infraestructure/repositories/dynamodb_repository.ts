@@ -25,7 +25,6 @@ export class DynamoDBClientInstance {
 // Obtiene una cita de DynamoDB por su ID
 // @param appointmentId ID de la cita a buscar
 // @returns Los datos de la cita (ya convertidos a objeto simple)
-
 export const getAppointmentById = async (appointmentId: string): Promise<any> => {
   try {
     const client = DynamoDBClientInstance.getInstance();
@@ -61,9 +60,8 @@ export const getAppointmentById = async (appointmentId: string): Promise<any> =>
 
 // Actualiza el estado de una cita en DynamoDB
 // @param appointmentId ID de la cita a actualizar
-// @param status Nuevo estado de la cita
-// @returns Datos actualizados de la cita
- 
+// @param status nuevo estado de la cita
+// @returns datos actualizados de la cita
 export const updateAppointmentStatus = async (appointmentId: string, status: string): Promise<any> => {
   try {
     const client = DynamoDBClientInstance.getInstance();
@@ -87,10 +85,9 @@ export const updateAppointmentStatus = async (appointmentId: string, status: str
     const command = new UpdateItemCommand(params);
     const response = await client.send(command);
     
-    // Retornar simplemente el objeto con los datos relevantes
     if (!response.Attributes) return null;
     
-    // Extraer solo los campos que realmente necesitas
+    // extrae solo los campos que realmente necesitas
     return {
       appointmentId: response.Attributes.appointmentId?.S,
       insuredId: response.Attributes.insuredId?.S,
